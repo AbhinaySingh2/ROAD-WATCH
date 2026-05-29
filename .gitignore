@@ -1,0 +1,27 @@
+# Global / OS-specific files
+.DS_Store
+Thumbs.db
+*.log
+
+# Frontend build cache and dependencies
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Backend environment, databases, and media uploads
+backend/venv/
+backend/.venv/
+backend/env/
+backend/__pycache__/
+backend/*.pyc
+backend/roadwatch.db
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+backend/.env
+backend/.env.*
+backend/uploads/

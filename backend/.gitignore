@@ -1,0 +1,26 @@
+# Python virtual environments
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Database
+roadwatch.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment keys and secrets
+.env
+.env.*
+!.env.example
+
+# Citizen uploaded images folder
+uploads/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
