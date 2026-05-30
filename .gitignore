@@ -2,6 +2,7 @@
 .DS_Store
 Thumbs.db
 *.log
+/ loc.py
 
 # Frontend build cache and dependencies
 frontend/node_modules/
