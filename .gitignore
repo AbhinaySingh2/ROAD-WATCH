@@ -2,8 +2,8 @@
 .DS_Store
 Thumbs.db
 *.log
-/ loc.py
-
+loc.py
+generate_doc.py
 # Frontend build cache and dependencies
 frontend/node_modules/
 frontend/.next/

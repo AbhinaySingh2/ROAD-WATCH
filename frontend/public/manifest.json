@@ -1,0 +1,16 @@
+{
+  "name": "RoadWatch Safety Center",
+  "short_name": "RoadWatch",
+  "description": "Civic infrastructure incident reporting and driver safety center.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF9F5",
+  "theme_color": "#FF5A1F",
+  "icons": [
+    {
+      "src": "/heart.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

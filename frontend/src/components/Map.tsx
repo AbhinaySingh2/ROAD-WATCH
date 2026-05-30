@@ -12,9 +12,14 @@ const customIcon = typeof window !== "undefined" ? L.icon({
 const standardPath: [number, number][] = [[25.5950, 85.0300], [25.5980, 85.0350], [25.6005, 85.0400]];
 const safetyPath: [number, number][] = [[25.5950, 85.0300], [25.5940, 85.0325], [25.5945, 85.0370], [25.6005, 85.0400]];
 
+const sevColor = (s: string) => s === 'CRITICAL' ? 'bg-red-500/20 text-red-450' : s === 'HIGH' ? 'bg-orange-500/20 text-orange-450' : s === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-450' : 'bg-green-500/20 text-green-450';
+
 export default function Map({ reports, onUpvote, isSafetyRoutingActive }: { reports: any[], onUpvote?: (id: number) => void, isSafetyRoutingActive?: boolean }) {
   const sorted = [...reports].sort((a, b) => (b.impact_score ?? 0) - (a.impact_score ?? 0));
   const heatReports = sorted.filter(r => r.damage_type === 'POTHOLE' || r.severity === 'CRITICAL' || r.severity === 'HIGH');
+  const routeOpts = isSafetyRoutingActive
+    ? { color: '#10b981', weight: 5, opacity: 0.85 }
+    : { color: '#ef4444', weight: 4, opacity: 0.65, dashArray: "8 8" };
 
   return (
     <MapContainer center={[25.5980, 85.0350]} zoom={15} style={{ height: "calc(100vh - 120px)", minHeight: "500px", width: "100%", borderRadius: "0.75rem", zIndex: 0 }} zoomControl={false} >
@@ -24,15 +29,20 @@ export default function Map({ reports, onUpvote, isSafetyRoutingActive }: { repo
         <Circle key={`h-${r.id}`} center={[r.latitude, r.longitude]} radius={120} pathOptions={{ color: r.severity === 'CRITICAL' ? '#ef4444' : '#f97316', fillColor: r.severity === 'CRITICAL' ? '#ef4444' : '#f97316', fillOpacity: 0.2, weight: 1.5, dashArray: "4 4" }} />
       ))}
 
-      <Polyline positions={isSafetyRoutingActive ? safetyPath : standardPath} pathOptions={{ color: isSafetyRoutingActive ? '#10b981' : '#ef4444', weight: isSafetyRoutingActive ? 5 : 4, opacity: isSafetyRoutingActive ? 0.85 : 0.65, dashArray: isSafetyRoutingActive ? undefined : "8 8" }} />
+      <Polyline positions={isSafetyRoutingActive ? safetyPath : standardPath} pathOptions={routeOpts} />
 
       {sorted.map((report) => (
         <Marker key={report.id} position={[report.latitude, report.longitude]} icon={customIcon || undefined} >
           <Popup className="custom-popup">
             <div className="p-1.5 min-w-[210px] text-white text-left font-sans">
               <h3 className="font-extrabold mb-1.5 text-sm text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-300">#{report.id} {report.infra_type || "Incident"}</h3>
+              {report.image_url && (
+                <div className="w-full aspect-video rounded-xl overflow-hidden bg-neutral-900 border border-white/5 mb-2.5 shadow-inner">
+                  <img src={`http://localhost:8000/${report.image_url}`} alt="Hazard preview" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              )}
               <p className="text-[11px] text-neutral-400 mb-2.5 flex items-center gap-1.5">Severity: 
-                <span className={`font-black px-2 py-0.5 rounded text-[10px] ${report.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-450' : report.severity === 'HIGH' ? 'bg-orange-500/20 text-orange-450' : report.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-450' : 'bg-green-500/20 text-green-450'}`}>{report.severity || "Unknown"}</span>
+              <span className={`font-black px-2 py-0.5 rounded text-[10px] ${sevColor(report.severity)}`}>{report.severity || "Unknown"}</span>
               </p>
               
               <div className="text-[11px] bg-white/5 border border-white/5 p-2 rounded-xl mb-2 text-neutral-300"><strong className="text-neutral-400">Assigned:</strong> {report.assigned_authority || "Pending Assessment"}</div>
