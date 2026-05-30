@@ -1,4 +1,4 @@
-import os, enum, logging, asyncio, json, uuid, io
+import os, enum, logging, asyncio, json, uuid, io, hashlib # <-- NEW: hashlib added
 from datetime import datetime
 from typing import List, Optional, Tuple
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Request
@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     SECRET_KEY: Optional[str] = None
     ADMIN_EMAIL: Optional[str] = None
     ADMIN_PASSWORD: Optional[str] = None
-    # --- NEW: Added Supabase Settings ---
     SUPABASE_URL: Optional[str] = None
     SUPABASE_KEY: Optional[str] = None
     class Config:
@@ -35,7 +34,6 @@ class Settings(BaseSettings):
 settings = Settings()
 limiter = Limiter(key_func=get_remote_address)
 
-# --- NEW: Initialize Supabase Client ---
 if settings.SUPABASE_URL and settings.SUPABASE_KEY:
     supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 else:
@@ -58,6 +56,9 @@ class Authority(str, enum.Enum): NHAI = "NHAI"; STATE_HIGHWAY = "STATE_HIGHWAY";
 class Report(Base):
     __tablename__ = "reports"
     id = Column(Integer, primary_key=True, index=True); latitude = Column(Float, nullable=False); longitude = Column(Float, nullable=False); image_url = Column(String, nullable=True)
+    # --- NEW: Added image_hash column ---
+    image_hash = Column(String, index=True, nullable=True)
+    
     severity = Column(Enum(SeverityLevel), default=SeverityLevel.LOW); infra_type = Column(Enum(InfrastructureType), default=InfrastructureType.OTHER); ai_confidence = Column(Float, default=0.0); ai_description = Column(Text, nullable=True)
     impact_score = Column(Integer, default=0); upvotes = Column(Integer, default=0, nullable=False); citizen_description = Column(Text, nullable=True); address = Column(Text, nullable=True)
     road_name = Column(String, nullable=True); assigned_authority = Column(Enum(Authority), default=Authority.UNKNOWN, index=True); status = Column(Enum(ReportStatus), default=ReportStatus.PENDING, index=True)
@@ -89,7 +90,6 @@ class AIAnalysisResult(BaseModel):
     ai_description: str = Field(description="Damage description")
     impact_score: int = Field(description="1-100")
 
-# --- NEW: Now accepts a PIL Image directly in memory instead of a file path ---
 async def analyze_image(img: Image.Image) -> AIAnalysisResult:
     if not settings.GEMINI_API_KEY: return get_mock_analysis()
     try:
@@ -154,27 +154,31 @@ async def submit_report(
     public_image_url = None
     file_name = None
     img_obj = None
+    file_hash = None # <-- NEW: Initialized just in case there's no image
 
     if image:
         ext = image.filename.split('.')[-1].lower() if '.' in image.filename else ""
         if ext not in ["jpg", "jpeg", "png", "webp"]: raise HTTPException(status_code=400, detail="Invalid file type. Only JPG, JPEG, PNG, and WEBP allowed.")
         
         try:
-            # --- NEW: Process image in memory, resize, and upload to Supabase ---
             img_obj = Image.open(image.file)
             if img_obj.width > 1280: img_obj = img_obj.resize((1280, int(1280 * (img_obj.height / img_obj.width))), Image.LANCZOS)
             
-            # Convert to bytes
             img_byte_arr = io.BytesIO()
             img_obj.convert("RGB").save(img_byte_arr, format="JPEG", quality=75, optimize=True)
             img_bytes = img_byte_arr.getvalue()
 
+            # --- NEW: Generate Hash and Check for Duplicates ---
+            file_hash = hashlib.md5(img_bytes).hexdigest()
+            existing_report = (await db.execute(select(Report).where(Report.image_hash == file_hash))).scalar_one_or_none()
+            if existing_report:
+                raise HTTPException(status_code=409, detail="Duplicate rejected: This exact image has already been reported.")
+            # ---------------------------------------------------
+
             if not supabase: raise Exception("Supabase client not initialized")
             
-            # Generate a truly unique filename
             file_name = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.jpg"
             
-            # Upload to Supabase Storage
             supabase.storage.from_("uploads").upload(
                 path=file_name,
                 file=img_bytes,
@@ -182,10 +186,11 @@ async def submit_report(
             )
             public_image_url = supabase.storage.from_("uploads").get_public_url(file_name)
 
+        except HTTPException:
+            raise # Re-raise the duplicate error without catching it
         except Exception as e: 
             raise HTTPException(status_code=400, detail=f"Failed to process or upload image: {str(e)}")
 
-    # Send the in-memory PIL image to Gemini
     ai_res = await analyze_image(img_obj) if img_obj else None
     kws = ["map", "selfie", "spam", "dog", "cat", "flower", "logo"]
     if ai_res and any(k in (s or "").lower() for k in kws for s in [description, getattr(image, 'filename', None)]):
@@ -195,7 +200,6 @@ async def submit_report(
     address, road_name = await reverse_geocode(latitude, longitude)
     authority = determine_authority(road_name)
 
-    # --- NEW: If validation fails, delete the image from Supabase cloud ---
     def fail(msg: str):
         if file_name and supabase:
             try: supabase.storage.from_("uploads").remove([file_name])
@@ -206,8 +210,8 @@ async def submit_report(
     if ai_res and ai_res.ai_confidence < (ai_settings.get("min_confidence", 75.0) / 100.0):
         fail(f"AI Triage Failed: Confidence level ({int(ai_res.ai_confidence * 100)}%) is below the required threshold ({int(ai_settings['min_confidence'])}%).")
 
-    # --- NEW: Save the Supabase public_image_url to the database ---
-    data = {"latitude": latitude, "longitude": longitude, "image_url": public_image_url, "address": address, "road_name": road_name, "assigned_authority": authority, "citizen_description": description,
+    # --- NEW: Added image_hash to the database insertion ---
+    data = {"latitude": latitude, "longitude": longitude, "image_url": public_image_url, "image_hash": file_hash, "address": address, "road_name": road_name, "assigned_authority": authority, "citizen_description": description,
              **(({"severity": ai_res.severity, "infra_type": ai_res.infra_type, "ai_confidence": ai_res.ai_confidence, "ai_description": ai_res.ai_description, "impact_score": ai_res.impact_score, "status": ReportStatus.PENDING}) if ai_res else {})}
     rep = Report(**data); db.add(rep); await db.commit(); await db.refresh(rep)
     return rep
