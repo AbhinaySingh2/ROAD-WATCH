@@ -123,6 +123,10 @@ def determine_authority(road_name: str) -> str:
     return "NHAI" if "NH" in n or "NATIONAL HIGHWAY" in n else "STATE_HIGHWAY" if "SH" in n or "STATE HIGHWAY" in n else "MUNICIPAL"
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
+@app.on_event("startup")
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
