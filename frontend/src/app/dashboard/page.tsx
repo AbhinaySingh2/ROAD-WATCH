@@ -263,7 +263,7 @@ export default function DashboardPage() {
             <div className="p-6 space-y-5 overflow-y-auto flex-1">
               {reviewState.item.image_url && (
                 <div className="w-full aspect-video rounded-2xl overflow-hidden bg-stone-50 border border-black/5 relative shadow-inner">
-                  <img src={`http://localhost:8000/${reviewState.item.image_url}`} alt="Hazard verification" className="w-full h-full object-cover" />
+                  <img src={reviewState.image_url} alt="Hazard verification" className="w-full h-full object-cover" />
                 </div>
               )}
               {reviewState.error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 font-bold">{reviewState.error}</div>}
