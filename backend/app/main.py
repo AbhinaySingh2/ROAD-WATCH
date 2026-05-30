@@ -40,7 +40,7 @@ else:
     supabase = None
     logging.warning("Supabase credentials missing! Uploads will fail.")
 
-engine = create_async_engine(settings.DATABASE_URL, echo=True, future=True, pool_size=10, max_overflow=20, pool_recycle=1800)
+engine = create_async_engine(settings.DATABASE_URL, echo=True, future=True, pool_size=10, max_overflow=20, pool_recycle=1800, connect_args={"statement_cache_size": 0})
 
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
