@@ -126,7 +126,7 @@ app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-origins = [o.strip() for o in settings.CORS_ALLOW_ORIGINS.split(",") if o.strip()] if settings.CORS_ALLOW_ORIGINS else ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "https://road-watch-phi.vercel.app/"]
+origins = [o.strip() for o in settings.CORS_ALLOW_ORIGINS.split(",") if o.strip()] if settings.CORS_ALLOW_ORIGINS else ["*" ]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
