@@ -554,7 +554,7 @@ export default function DashboardPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col text-left font-sans">
                           <span className="text-stone-855 font-bold max-w-[200px] truncate">
-                            {r.road_name ||( reviewState.item.address || "").split(',')}
+                            {r.road_name ||( r.address || "").split(',')}
                           </span>
                           <span className="text-[10px] text-stone-400 font-mono">
                             ({r.latitude.toFixed(5)}, {r.longitude.toFixed(5)})
