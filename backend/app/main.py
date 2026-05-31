@@ -202,7 +202,7 @@ async def analyze_image(img: Image.Image) -> AIAnalysisResult:
                     },
                 )
             ),
-            timeout=5.0,
+            timeout=20.0,
         )
         if response.text:
             return AIAnalysisResult(**json.loads(response.text))
