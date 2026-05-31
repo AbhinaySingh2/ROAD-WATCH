@@ -56,6 +56,14 @@ export function ReviewModal({ reviewState, setReviewState, closeReview, saveRevi
             </div>
           </div>
 
+          <div className="bg-stone-50 border border-black/5 rounded-2xl p-4 text-left">
+            <div className="text-[9px] text-indigo-500 font-black uppercase mb-1">Gemini AI Analysis</div>
+            <div className="text-xs text-stone-650 font-semibold italic">
+              "{reviewState.item.ai_description || "No AI description available."}"
+            </div>
+          </div>
+
+
           <div className="bg-stone-50 border border-black/5 rounded-2xl p-4 text-left shadow-inner flex justify-between gap-4">
             {[
               [
