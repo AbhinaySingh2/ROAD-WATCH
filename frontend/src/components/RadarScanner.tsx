@@ -63,7 +63,7 @@ export default function RadarScanner() {
         <div className="absolute inset-0 bg-stone-50/50 -z-10 group-hover:bg-orange-50/20 transition-colors duration-1000" />
         <div className="flex items-center justify-between mb-4 border-b border-black/5 pb-4">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF5A1F] flex items-center gap-1.5">
-            <Compass className="w-3.5 h-3.5" /> {isGpsActive ? "📡 ACTIVE GPS SCANNER" : "🧭 RADAR SCANNER (STATIC)"}
+            <Compass className="w-3.5 h-3.5" /> {isGpsActive ? " ACTIVE GPS SCANNER" : "🧭 RADAR SCANNER (STATIC)"}
           </span>
           <span className="text-[9px] font-mono text-stone-400">SYS_SAFETY_RADAR</span>
         </div>

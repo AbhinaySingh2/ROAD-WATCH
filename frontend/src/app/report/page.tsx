@@ -152,7 +152,7 @@ export default function ReportPage() {
     }
 
     const fd = new FormData();
-    fd.append("image", compressedFile);
+    fd.append("image", compressedFile, file.name);
     if (fileHash) fd.append("image_hash", fileHash);
     fd.append("latitude", location.lat.toString());
     fd.append("longitude", location.lng.toString());
