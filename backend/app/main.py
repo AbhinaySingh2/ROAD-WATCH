@@ -176,6 +176,7 @@ geolocator = Nominatim(user_agent="roadwatch_api")
 
 
 class AIAnalysisResult(BaseModel):
+    reasoning: str = Field(description="Step-by-step reasoning on whether this image actually contains a physical road, street, or civic infrastructure, and whether it shows damage.")
     is_road_damage: bool = Field(description="Damage status")
     severity: str = Field(description="LOW/MEDIUM/HIGH/CRITICAL")
     infra_type: str = Field(description="POTHOLE/CRACK/UNPAVED/WATERLOGGING/OTHER")
@@ -189,7 +190,11 @@ async def analyze_image(img: Image.Image) -> AIAnalysisResult:
         return get_mock_analysis()
     try:
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        prompt = "Determine if this image shows a real road/street/infrastructure with damage. Set is_road_damage. Classify type (POTHOLE, CRACK, UNPAVED, WATERLOGGING, OTHER), severity (LOW, MEDIUM, HIGH, CRITICAL), and assign impact score (1-100)."
+        prompt = (
+            "Determine if this image shows a real road/street/infrastructure with damage. "
+            "Set is_road_damage. If the image clearly does not contain any road, street, or civic infrastructure, set is_road_damage to False and explain why in ai_description. "
+            "If True, classify type (POTHOLE, CRACK, UNPAVED, WATERLOGGING, OTHER), severity (LOW, MEDIUM, HIGH, CRITICAL), and assign impact score (1-100)."
+        )
         response = await asyncio.wait_for(
             asyncio.to_thread(
                 lambda: client.models.generate_content(
@@ -215,6 +220,7 @@ async def analyze_image(img: Image.Image) -> AIAnalysisResult:
 
 def get_mock_analysis() -> AIAnalysisResult:
     return AIAnalysisResult(
+        reasoning="Mock reasoning: this is a hardcoded fallback analysis.",
         is_road_damage=True,
         severity="MEDIUM",
         infra_type="POTHOLE",
