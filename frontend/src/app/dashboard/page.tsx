@@ -291,7 +291,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="p-6 border-t border-black/5 flex items-center justify-between bg-stone-50/40 shrink-0">
-              <a href={`http://localhost:8000/api/v1/issues/${reviewState.item.id}/challan`} target="_blank" rel="noopener noreferrer" className="px-5 py-3 text-xs font-black uppercase tracking-widest rounded-full bg-white hover:bg-stone-50 border border-black/5 text-stone-500 hover:text-stone-900 cursor-pointer active:scale-95 shadow-sm flex items-center gap-1.5"><FileDown className="w-3.5 h-3.5" /> <span>Print Challan</span></a>
+              <a href={`${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '')}/api/v1/issues/${reviewState.item.id}/challan`} target="_blank" rel="noopener noreferrer" className="px-5 py-3 text-xs font-black uppercase tracking-widest rounded-full bg-white hover:bg-stone-50 border border-black/5 text-stone-500 hover:text-stone-900 cursor-pointer active:scale-95 shadow-sm flex items-center gap-1.5"><FileDown className="w-3.5 h-3.5" /> <span>Print Challan</span></a>
               <div className="flex items-center gap-3">
                 <button onClick={closeReview} className="px-5 py-3 text-xs font-black uppercase tracking-widest rounded-full bg-white hover:bg-stone-100 border border-black/5 text-stone-700 cursor-pointer active:scale-95">Cancel</button>
                 <button disabled={reviewState.saving} onClick={saveReview} className="px-5 py-3 text-xs font-black uppercase tracking-widest rounded-full bg-[#FF5A1F] hover:bg-[#E84E15] text-white disabled:opacity-60 shadow-md active:scale-95">{reviewState.saving ? "Saving..." : "Save Changes"}</button>

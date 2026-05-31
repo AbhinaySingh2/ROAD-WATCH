@@ -38,7 +38,7 @@ export default function Map({ reports, onUpvote, isSafetyRoutingActive }: { repo
               <h3 className="font-extrabold mb-1.5 text-sm text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-300">#{report.id} {report.infra_type || "Incident"}</h3>
               {report.image_url && (
                 <div className="w-full aspect-video rounded-xl overflow-hidden bg-neutral-900 border border-white/5 mb-2.5 shadow-inner">
-                  <img src={`http://localhost:8000/${report.image_url}`} alt="Hazard preview" className="w-full h-full object-cover" loading="lazy" />
+                  <img src={report.image_url.startsWith('http') ? report.image_url : `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '')}/${report.image_url}`} alt="Hazard preview" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               )}
               <p className="text-[11px] text-neutral-400 mb-2.5 flex items-center gap-1.5">Severity: 
