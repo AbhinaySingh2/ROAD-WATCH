@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     SUPABASE_KEY: Optional[str] = None
 
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(__file__), "..", ".env")
         extra = "ignore"
 
 
