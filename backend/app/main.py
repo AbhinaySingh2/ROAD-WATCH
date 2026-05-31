@@ -187,7 +187,7 @@ class AIAnalysisResult(BaseModel):
 
 async def analyze_image(img: Image.Image) -> AIAnalysisResult:
     if not settings.GEMINI_API_KEY:
-        return get_mock_analysis()
+        return get_mock_analysis("GEMINI_API_KEY is missing")
     try:
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
         prompt = (
@@ -213,19 +213,21 @@ async def analyze_image(img: Image.Image) -> AIAnalysisResult:
             return AIAnalysisResult(**json.loads(response.text))
     except asyncio.TimeoutError:
         logger.error("Gemini timed out, using mock fallback.")
+        return get_mock_analysis("TimeoutError")
     except Exception as e:
         logger.error(f"AI failed: {e}")
-    return get_mock_analysis()
+        return get_mock_analysis(str(e))
 
 
-def get_mock_analysis() -> AIAnalysisResult:
+def get_mock_analysis(error_msg: str = "") -> AIAnalysisResult:
+    desc = f"Mock pothole detected. (Error: {error_msg})" if error_msg else "Mock pothole detected."
     return AIAnalysisResult(
         reasoning="Mock reasoning: this is a hardcoded fallback analysis.",
         is_road_damage=True,
         severity="MEDIUM",
         infra_type="POTHOLE",
         ai_confidence=0.85,
-        ai_description="Mock pothole detected.",
+        ai_description=desc,
         impact_score=65,
     )
 
